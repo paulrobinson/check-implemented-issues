@@ -1,2 +1,20 @@
 # check-implemented-issues
-Checks implemented QUARKUS JIRA issues to ensure they are in the corresponding upstream release
+Checks implemented QUARKUS JIRA issues to ensure they are in the corresponding upstream release. It produces a report to output.html showing the status of each issue.
+
+## Prerequisite
+
+You must install JBang which can be (easily) obtained by following the instructions on  https://www.jbang.dev/.
+
+You will need to create a JIRA personal access token. This option is available from the your Profile area in JIRA. This is the link used for the issues.redhat.com JIRA server to get to that page: https://issues.redhat.com/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens
+
+You will also need a GitHub token. TODO: explain how to get it here.
+
+
+## Usage
+Run the script as follows:
+
+ jbang ./run.java -j <JIRA Personal Access Token> -s <JIRA Server Base URL> -g <GitHub Personal Access Token> -q <JIRA JQL Query>
+
+Example:
+
+ jbang ./run.java -j <JIRA Personal Access Token> -s https://issues.redhat.com -g <GitHub Access Token> -q "project = QUARKUS AND status in (Resolved, Closed, Verified, Implemented) AND fixVersion = 2.2.4.GA AND component = 'team/eng'"
