@@ -1,4 +1,5 @@
 # check-implemented-issues
+
 Checks implemented QUARKUS JIRA issues to ensure they are in the corresponding upstream release. It produces a report to output.html showing the status of each issue.
 
 ## Prerequisite
@@ -15,6 +16,6 @@ Run the script as follows:
 
  jbang ./run.java -j <JIRA Personal Access Token> -s <JIRA Server Base URL> -g <GitHub Personal Access Token> -q <JIRA JQL Query>
 
-Example:
+For example:
 
  jbang ./run.java -j <JIRA Personal Access Token> -s https://issues.redhat.com -g <GitHub Access Token> -q "project = QUARKUS AND status in (Resolved, Closed, Verified, Implemented) AND fixVersion = 2.2.4.GA AND component = 'team/eng'"
