@@ -57,7 +57,7 @@ class run implements Callable<Integer> {
         HTMLDump htmlDump = new HTMLDump();
 
         htmlDump.appendHtmlChunk("<table border='1' style='border-collapse:collapse'>");
-        htmlDump.appendHtmlChunk("<tr><th>Issue</th><th>Summary</th><th>GH Milestone</th><th>Status</th></tr>");
+        htmlDump.appendHtmlChunk("<tr><th>JIRA Issue</th><th>Status</th><th>GH Issue</th><th>GH Milestone</th><th>Summary</th></tr>");
 
         SearchResult searchResultsAll = restClient.getSearchClient().searchJql(query, 1000, 0, null).claim();
         System.out.println(searchResultsAll.getTotal());
@@ -66,28 +66,35 @@ class run implements Callable<Integer> {
             String htmlRow = "";
             htmlRow += "<tr>";
             htmlRow +=     "<td><a href='https://issues.redhat.com/browse/" +  issue.getKey() + "'>" + issue.getKey() + "</a></td>";
-            htmlRow +=     "<td>" + issue.getSummary() + "</td>";
+            htmlRow +=     "<td>" + issue.getStatus().getName() + "</td>";
+
 
             Object prUrl = issue.getField(JIRA_GIT_PULL_REQUEST_FIELD_ID).getValue();
             if (prUrl != null) {
                 GHPullRequest ghPr =  githubClient.getOrganization("quarkusio").getRepository("quarkus").getPullRequest(HACK_getPrNumber(prUrl));
+                htmlRow +=     "<td><a href='" + ghPr.getHtmlUrl() + "'>" +  "#" + HACK_getPrNumber(prUrl) + "</a></td>";
                 if (ghPr.getMilestone() == null) {
-                    htmlRow +=     "<td>MISSING MILESTONE ON PR</td>";
+                    htmlRow +=     "<td>NO MILESTONE ON PR</td>";
                 } else {
                     htmlRow +=     "<td>" + ghPr.getMilestone().getTitle() + "</td>";
 
                     //Check if PR has a Milestone to be ignored
-                    if (ghPr.getMilestone().getTitle().startsWith(ignoreWithPrefix)) {
-                        System.out.println("[Ignoring] " + ghPr.getHtmlUrl() + ", Milestone: " + ghPr.getMilestone().getTitle());
-                        continue; //Ignore this row, as the Milestone matches the ignored prefix
+                    if (ignoreWithPrefix != null) {
+                        if (ghPr.getMilestone().getTitle().startsWith(ignoreWithPrefix)) {
+                            System.out.println("[Ignoring] " + ghPr.getHtmlUrl() + ", Milestone: " + ghPr.getMilestone().getTitle());
+                            continue; //Ignore this row, as the Milestone matches the ignored prefix
+                        }
                     }
+
                 }
 
             } else {
                 htmlRow +=     "<td>MISSING PR LINK</td>";
+                htmlRow +=     "<td>N/A</td>";
             }
 
-            htmlRow +=     "<td>" + issue.getStatus().getName() + "</td>";
+
+            htmlRow +=     "<td>" + issue.getSummary() + "</td>";
             htmlRow += "</tr>";
 
             htmlDump.appendHtmlChunk(htmlRow);
