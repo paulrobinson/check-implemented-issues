@@ -35,6 +35,9 @@ class run implements Callable<Integer> {
     @CommandLine.Option(names = {"-q", "--query"}, description = "The JQL query for JIRA issues to check", required = true)
     private String query;
 
+    @CommandLine.Option(names = {"-i", "--ignore-with-version-prefix"}, description = "Ignore issues with the specified prefix", required = false)
+    private String ignoreWithPrefix;
+
     private static final String JIRA_GIT_PULL_REQUEST_FIELD_ID = "customfield_12310220";
 
     public static void main(String... args) {
@@ -72,6 +75,12 @@ class run implements Callable<Integer> {
                     htmlRow +=     "<td>MISSING MILESTONE ON PR</td>";
                 } else {
                     htmlRow +=     "<td>" + ghPr.getMilestone().getTitle() + "</td>";
+
+                    //Check if PR has a Milestone to be ignored
+                    if (ghPr.getMilestone().getTitle().startsWith(ignoreWithPrefix)) {
+                        System.out.println("[Ignoring] " + ghPr.getHtmlUrl() + ", Milestone: " + ghPr.getMilestone().getTitle());
+                        continue; //Ignore this row, as the Milestone matches the ignored prefix
+                    }
                 }
 
             } else {
