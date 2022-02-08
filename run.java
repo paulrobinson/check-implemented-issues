@@ -68,7 +68,12 @@ class run implements Callable<Integer> {
             Object prUrl = issue.getField(JIRA_GIT_PULL_REQUEST_FIELD_ID).getValue();
             if (prUrl != null) {
                 GHPullRequest ghPr =  githubClient.getOrganization("quarkusio").getRepository("quarkus").getPullRequest(HACK_getPrNumber(prUrl));
-                htmlRow +=     "<td>" + ghPr.getMilestone().getTitle() + "</td>";
+                if (ghPr.getMilestone() == null) {
+                    htmlRow +=     "<td>MISSING MILESTONE ON PR</td>";
+                } else {
+                    htmlRow +=     "<td>" + ghPr.getMilestone().getTitle() + "</td>";
+                }
+
             } else {
                 htmlRow +=     "<td>MISSING PR LINK</td>";
             }
