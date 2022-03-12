@@ -16,7 +16,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 @Command(name = "run", mixinStandardHelpOptions = true, version = "run 0.1",
@@ -70,7 +74,12 @@ class run implements Callable<Integer> {
 
 
             Object prUrl = issue.getField(JIRA_GIT_PULL_REQUEST_FIELD_ID).getValue();
-            if (prUrl != null) {
+            if (isMultipleLinks(prUrl)) {
+                htmlRow +=     "<td>MULTIPLE PR LINKS</td>";
+                htmlRow +=     "<td>N/A</td>";
+            }
+            else if (isPullRequestLink(prUrl)) {
+
                 GHPullRequest ghPr =  githubClient.getOrganization("quarkusio").getRepository("quarkus").getPullRequest(HACK_getPrNumber(prUrl));
                 htmlRow +=     "<td><a href='" + ghPr.getHtmlUrl() + "'>" +  "#" + HACK_getPrNumber(prUrl) + "</a></td>";
                 if (ghPr.getMilestone() == null) {
@@ -85,9 +94,7 @@ class run implements Callable<Integer> {
                             continue; //Ignore this row, as the Milestone matches the ignored prefix
                         }
                     }
-
                 }
-
             } else {
                 htmlRow +=     "<td>MISSING PR LINK</td>";
                 htmlRow +=     "<td>N/A</td>";
@@ -105,6 +112,37 @@ class run implements Callable<Integer> {
         htmlDump.dump(new File("output.html"));
 
         return 0;
+    }
+
+    public boolean isMultipleLinks(Object url) {
+        if (url == null) return false;
+        return countOccurances(url.toString(), "http") > 1;
+    }
+
+    public int countOccurances(String input, String match) {
+        int index = input.indexOf(match);
+        int count = 0;
+        while (index != -1) {
+            count++;
+            input = input.substring(index + 1);
+            index = input.indexOf(match);
+        }
+        return count;
+    }
+
+    public boolean isPullRequestLink(Object url) {
+        if (url == null) return false;
+        if (isMultipleLinks(url)) return false;
+        try {
+            String strURL = url.toString();
+            strURL = strURL.substring(2); //remove preceding: "[
+            strURL = strURL.substring(0, strURL.length() - 2); //remove trailing: ]"
+            strURL = strURL.replace("\\", ""); //remove escape chars
+            URL parsedURL = new URL(strURL);
+            return parsedURL.getPath().startsWith("/quarkusio/quarkus/pull/");
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 
     public int HACK_getPrNumber(Object prUrl) {
